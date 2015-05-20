@@ -1,0 +1,27 @@
+Description
+-----------
+
+nitro-pyxis - Pyxis logging for Nitro
+
+Source
+------
+
+https://github.com/bbc/nitro-pyxis
+
+Build
+-----
+
+In Jenkins:
+
+* https://jenkins.bbc.co.uk/job/nitro-pyxis/
+
+In a BBC sandbox:
+
+1. BUILD_NUMBER=<N> ./mk_tgz.sh
+2. mbt -s rpmbuild
+
+See Also
+--------
+
+* https://confluence.dev.bbc.co.uk/display/nitro/Nitro+AWS+Monitoring
+* https://confluence.dev.bbc.co.uk/display/nitro/Nitro+Runbook+-+AWS

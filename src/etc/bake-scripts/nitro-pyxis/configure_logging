@@ -1,0 +1,72 @@
+#!/usr/bin/env python
+
+
+import json
+import os
+import re
+import stat
+import sys
+
+LOG_CONFIG_FILE = "/etc/flume-ng/conf/bbc-flume.conf"
+S3_PREFIX_REGEX = "\${s3_prefix}"
+BUCKET_REGEX = "\${bucket}"
+ENV_REGEX = "\${environment}"
+ENDPOINT_REGEX = "\${endpoint}"
+VAR_HTTPD_DIR = "/var/log/httpd"
+#Read/write group/others plus maintain existing permissions
+HTTPD_PERMISSIONS = stat.S_IRGRP | stat.S_IROTH | stat.S_IXGRP\
+    | stat.S_IXOTH | stat.S_IRWXU
+
+
+def get_component_configuration(path):
+    with open(path, 'r') as f:
+        return json.load(f)
+
+
+def interpolate_bake_properties(env, bucket, endpoint):
+    with open(LOG_CONFIG_FILE, "r") as sources:
+        lines = sources.readlines()
+        with open(LOG_CONFIG_FILE, "w") as sources:
+            for line in lines:
+                changed = replace_bake_parameters(line, env, bucket, endpoint)
+                sources.write(changed)
+
+
+def replace_bake_parameters(line, env, bucket, endpoint):
+    line = re.sub(ENV_REGEX, env, line)
+    line = re.sub(ENDPOINT_REGEX, endpoint, line)
+    return re.sub(BUCKET_REGEX, bucket, line)
+
+
+def extract_env_property(config):
+    return config.get("environment")
+
+
+def extract_bucket_property(config):
+    return config.get("component_resources_bucket")
+
+
+def chmod_httpd_log_dir():
+    """
+    Make the httpd readble by all. Flume will not be able to read the
+    default access logs under this folder unless this is done.
+    """
+    if(os.path.exists(VAR_HTTPD_DIR)):
+        os.chmod(VAR_HTTPD_DIR, HTTPD_PERMISSIONS)
+
+
+def execute(path):
+    component_configuration = get_component_configuration(path)
+    env = extract_env_property(component_configuration)
+    bucket = extract_bucket_property(component_configuration)
+    # for all non live envs
+    endpoint = "pyxis-aggregator.internal.test.api.bbci.co.uk"
+    # for all live envs
+    if env in "live":
+        endpoint = "pyxis-aggregator.internal.api.bbci.co.uk"
+    interpolate_bake_properties(env, bucket, endpoint)
+    chmod_httpd_log_dir()
+
+if __name__ == "__main__":
+    path = sys.argv[1]
+    execute(path)
