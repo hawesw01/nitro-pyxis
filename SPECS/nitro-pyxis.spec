@@ -3,7 +3,7 @@
 
 Name:		    nitro-pyxis
 Version:	  1
-Release: 1
+Release:    __BUILD_NUMBER__
 Summary:	  Pyxis logging for Nitro
 Group:		  Development/Tools
 License:	  BBC Internal Only
