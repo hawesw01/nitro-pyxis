@@ -12,10 +12,6 @@ S3_PREFIX_REGEX = "\${s3_prefix}"
 BUCKET_REGEX = "\${bucket}"
 ENV_REGEX = "\${environment}"
 ENDPOINT_REGEX = "\${endpoint}"
-VAR_HTTPD_DIR = "/var/log/httpd"
-#Read/write group/others plus maintain existing permissions
-HTTPD_PERMISSIONS = stat.S_IRGRP | stat.S_IROTH | stat.S_IXGRP\
-    | stat.S_IXOTH | stat.S_IRWXU
 
 
 def get_component_configuration(path):
@@ -46,15 +42,6 @@ def extract_bucket_property(config):
     return config.get("component_resources_bucket")
 
 
-def chmod_httpd_log_dir():
-    """
-    Make the httpd readble by all. Flume will not be able to read the
-    default access logs under this folder unless this is done.
-    """
-    if(os.path.exists(VAR_HTTPD_DIR)):
-        os.chmod(VAR_HTTPD_DIR, HTTPD_PERMISSIONS)
-
-
 def execute(path):
     component_configuration = get_component_configuration(path)
     env = extract_env_property(component_configuration)
@@ -65,7 +52,6 @@ def execute(path):
     if env in "live":
         endpoint = "pyxis-aggregator.internal.api.bbci.co.uk"
     interpolate_bake_properties(env, bucket, endpoint)
-    chmod_httpd_log_dir()
 
 if __name__ == "__main__":
     path = sys.argv[1]
